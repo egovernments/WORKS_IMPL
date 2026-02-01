@@ -54,61 +54,77 @@ public class EnrichmentService {
     private static final String FILTER_START = "[?(";
     private static final String FILTER_END = ")]";
 
-    public StatementPushRequest enrichStatementPushRequest(StatementCreateRequest statementCreateRequest,Estimate estimate,Boolean isCreate) {
-    
-        log.info("EnrichmentService::enrichStatementRequest");
-    
-        StatementRequest statementRequest = statementCreateRequest.getStatementRequest();
-        RequestInfo requestInfo = statementCreateRequest.getRequestInfo();
-    
-        if (estimate == null) {
-    
-            EstimateResponse estimateResponse = estimateUtil.getEstimate(
-                    statementRequest.getId(),
-                    statementRequest.getTenantId(),
-                    Statement.StatementTypeEnum.ANALYSIS.toString(),
-                    requestInfo
+public StatementPushRequest enrichStatementPushRequest(
+        StatementCreateRequest statementCreateRequest,
+        Estimate estimate,
+        Boolean isCreate) {
+
+    log.info("EnrichmentService::enrichStatementRequest");
+
+    StatementRequest statementRequest = statementCreateRequest.getStatementRequest();
+    RequestInfo requestInfo = statementCreateRequest.getRequestInfo();
+
+    if (estimate == null) {
+
+        EstimateResponse estimateResponse = estimateUtil.getEstimate(
+                statementRequest.getId(),
+                statementRequest.getTenantId(),
+                Statement.StatementTypeEnum.ANALYSIS.toString(),
+                requestInfo
+        );
+
+        /**
+         * DRAFT ANALYSIS CREATE FLOW
+         * - Estimate not yet persisted
+         * - Proceed without blocking
+         * - Do NOT affect search / validation flows
+         */
+        if (estimateResponse == null
+                || estimateResponse.getEstimates() == null
+                || estimateResponse.getEstimates().isEmpty()) {
+
+            log.info(
+                "Draft ANALYSIS create flow. Proceeding without persisted estimate. referenceId={}, tenantId={}",
+                statementRequest.getId(),
+                statementRequest.getTenantId()
             );
-    
-            // DRAFT FLOW FIX
-            if (estimateResponse == null || estimateResponse.getEstimates().isEmpty()) {
-    
-                log.info(
-                    "Draft analysis flow detected. Proceeding without persisted estimate. estimateId={}, tenantId={}",
-                    statementRequest.getId(),
-                    statementRequest.getTenantId()
-                );
-    
-                // Minimal draft estimate (NO auditDetails)
-                Estimate draftEstimate = new Estimate();
-                draftEstimate.setId(statementRequest.getId());
-                draftEstimate.setTenantId(statementRequest.getTenantId());
-                draftEstimate.setEstimateDetails(Collections.emptyList());
-    
-                return enrichStatementPushRequestWithDetails(
-                        draftEstimate,
-                        requestInfo,
-                        statementRequest,
-                        isCreate
-                );
-            }
-    
+
+            Estimate draftEstimate = new Estimate();
+            draftEstimate.setId(statementRequest.getId());
+            draftEstimate.setTenantId(statementRequest.getTenantId());
+
+            // IMPORTANT: keep empty list, not null
+            draftEstimate.setEstimateDetails(Collections.emptyList());
+
+            // IMPORTANT: auditDetails must be null-safe
+            draftEstimate.setAuditDetails(null);
+
             return enrichStatementPushRequestWithDetails(
-                    estimateResponse.getEstimates().get(0),
-                    requestInfo,
-                    statementRequest,
-                    isCreate
-            );
-    
-        } else {
-            return enrichStatementPushRequestWithDetails(
-                    estimate,
+                    draftEstimate,
                     requestInfo,
                     statementRequest,
                     isCreate
             );
         }
+
+        // Normal (persisted estimate) flow
+        return enrichStatementPushRequestWithDetails(
+                estimateResponse.getEstimates().get(0),
+                requestInfo,
+                statementRequest,
+                isCreate
+        );
+
     }
+
+    // Estimate already passed (update / internal flow)
+    return enrichStatementPushRequestWithDetails(
+            estimate,
+            requestInfo,
+            statementRequest,
+            isCreate
+    );
+}
 
     /**
      * This method is used to fetch the Sor Rates , Sor Composition
