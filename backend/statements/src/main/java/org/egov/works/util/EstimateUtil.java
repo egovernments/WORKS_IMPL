@@ -54,19 +54,52 @@ private final RestTemplate restTemplate;
     }
 
     public EstimateResponse getEstimate(String estimateId, String tenantId, String statementType, RequestInfo requestInfo) {
-    log.info("EstimateUtil::getEstimate");
-    Set<String> estimateIdSet= new HashSet<>();
+        log.info("EstimateUtil::getEstimate");
+        Set<String> estimateIdSet= new HashSet<>();
         estimateIdSet.add(estimateId);
         StringBuilder url = getSearchURLWithParams(tenantId,statementType, estimateIdSet);
         RequestInfoWrapper requestInfoWrapper = RequestInfoWrapper.builder().requestInfo(requestInfo).build();
-        EstimateResponse fetchEstimates = fetchResult(url, requestInfoWrapper);
+        
+        // Retry logic to handle race condition when estimate is not yet persisted
+        int maxRetries = 3;
+        int retryDelayMs = 1000; // Start with 1 second
+        EstimateResponse fetchEstimates = null;
+
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            fetchEstimates = fetchResult(url, requestInfoWrapper);
+
+            if (fetchEstimates != null && fetchEstimates.getEstimates() != null && !fetchEstimates.getEstimates().isEmpty()) {
+                log.info("Successfully fetched estimate on attempt {}", attempt);
+                return fetchEstimates;
+            }
+
+            if (attempt < maxRetries) {
+                log.warn("Estimate not found on attempt {}. Retrying after {} ms. This may happen if estimate is not yet persisted to database.",
+                         attempt, retryDelayMs);
+                try {
+                    Thread.sleep(retryDelayMs);
+                    retryDelayMs *= 2; // Exponential backoff
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    log.error("Retry interrupted", e);
+                    break;
+                }
+            }
+        }
+
+        log.error("Failed to fetch estimate after {} attempts for ID: {}, tenant: {}", maxRetries, estimateId, tenantId);
         return fetchEstimates;
     }
     public EstimateResponse fetchResult(StringBuilder uri, Object request) {
         mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         EstimateResponse response = null;
         try {
+            log.info("Calling estimate service with URL: {}", uri.toString());
             response = restTemplate.postForObject(uri.toString(), request, EstimateResponse.class);
+            log.info("Estimate service response received: {}", response != null ? "Not null" : "NULL");
+            if (response != null && response.getEstimates() != null) {
+                log.info("Number of estimates in response: {}", response.getEstimates().size());
+            }
         } catch (HttpClientErrorException e) {
             log.error("External Service threw an Exception: ", e);
             throw new ServiceCallException(e.getResponseBodyAsString());
