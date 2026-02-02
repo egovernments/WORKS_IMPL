@@ -64,6 +64,8 @@ public StatementPushRequest enrichStatementPushRequest(
     StatementRequest statementRequest = statementCreateRequest.getStatementRequest();
     RequestInfo requestInfo = statementCreateRequest.getRequestInfo();
 
+    // DRAFT ANALYSIS CREATE FLOW
+
     if (estimate == null) {
 
         EstimateResponse estimateResponse = estimateUtil.getEstimate(
@@ -73,51 +75,54 @@ public StatementPushRequest enrichStatementPushRequest(
                 requestInfo
         );
 
-        /**
-         * DRAFT ANALYSIS CREATE FLOW
-         * - Estimate not yet persisted
-         * - Proceed without blocking
-         * - Do NOT affect search / validation flows
-         */
         if (estimateResponse == null
                 || estimateResponse.getEstimates() == null
                 || estimateResponse.getEstimates().isEmpty()) {
 
             log.info(
-                "Draft ANALYSIS create flow. Proceeding without persisted estimate. referenceId={}, tenantId={}",
+                "Draft ANALYSIS create flow. Creating minimal statement only. referenceId={}, tenantId={}",
                 statementRequest.getId(),
                 statementRequest.getTenantId()
             );
 
-            Estimate draftEstimate = new Estimate();
-            draftEstimate.setId(statementRequest.getId());
-            draftEstimate.setTenantId(statementRequest.getTenantId());
+            Statement statement = Statement.builder()
+                    .id(statementRequest.getId())
+                    .tenantId(statementRequest.getTenantId())
+                    .targetId(statementRequest.getId())
+                    .statementType(Statement.StatementTypeEnum.ANALYSIS)
+                    .sorDetails(Collections.emptyList())
+                    .basicSorDetails(Collections.emptyList())
+                    .additionalDetails(new HashMap<>())
+                    .build();
 
-            // IMPORTANT: keep empty list, not null
-            draftEstimate.setEstimateDetails(Collections.emptyList());
+            AuditDetails auditDetails =
+                    statementServiceUtil.getAuditDetails(
+                            requestInfo.getUserInfo().getUuid(),
+                            statement,
+                            true
+                    );
+            statement.setAuditDetails(auditDetails);
 
-            // IMPORTANT: auditDetails must be null-safe
-            draftEstimate.setAuditDetails(null);
-
-            return enrichStatementPushRequestWithDetails(
-                    draftEstimate,
-                    requestInfo,
-                    statementRequest,
-                    isCreate
-            );
+            return StatementPushRequest.builder()
+                    .requestInfo(requestInfo)
+                    .statement(statement)
+                    .build();
         }
 
-        // Normal (persisted estimate) flow
+        
+        // NORMAL CREATE (estimate exists)
+ 
         return enrichStatementPushRequestWithDetails(
                 estimateResponse.getEstimates().get(0),
                 requestInfo,
                 statementRequest,
                 isCreate
         );
-
     }
 
-    // Estimate already passed (update / internal flow)
+
+    // UPDATE / INTERNAL FLOW
+
     return enrichStatementPushRequestWithDetails(
             estimate,
             requestInfo,
