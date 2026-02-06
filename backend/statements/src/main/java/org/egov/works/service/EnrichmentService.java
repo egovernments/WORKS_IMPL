@@ -226,6 +226,18 @@ public StatementPushRequest enrichStatementPushRequest(
     public StatementPushRequest enrichStatementPushRequestForUpdate(StatementCreateRequest statementCreateRequest, Statement existingStatement, Estimate estimate, Boolean isCreate) {
         log.info("EnrichmentService::enrichStatementPushRequestForUpdate");
 
+        if (existingStatement.getSorDetails() == null
+                || existingStatement.getSorDetails().isEmpty()) {
+
+            log.info("Draft statement detected. Rebuilding Analysis Statement from estimate.");
+
+            // Rebuild FULL analysis statement from estimate
+            return enrichStatementPushRequest(
+                    statementCreateRequest,
+                    estimate,
+                    true   // force CREATE flow
+            );
+        }
         StatementPushRequest updatedStatementPushRequest = enrichStatementPushRequest(statementCreateRequest, estimate, isCreate);
 
         if (updatedStatementPushRequest == null) {
