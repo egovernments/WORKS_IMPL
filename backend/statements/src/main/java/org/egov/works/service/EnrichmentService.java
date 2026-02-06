@@ -64,8 +64,12 @@ public StatementPushRequest enrichStatementPushRequest(
     StatementRequest statementRequest = statementCreateRequest.getStatementRequest();
     RequestInfo requestInfo = statementCreateRequest.getRequestInfo();
 
-    // DRAFT ANALYSIS CREATE FLOW
-
+    /*
+     * CREATE FLOW (estimate not passed explicitly)
+     * This covers:
+     *  - Draft estimate
+     *  - Final estimate
+     */
     if (estimate == null) {
 
         EstimateResponse estimateResponse = estimateUtil.getEstimate(
@@ -75,54 +79,50 @@ public StatementPushRequest enrichStatementPushRequest(
                 requestInfo
         );
 
+        /*
+         * If estimate truly does NOT exist,
+         * do NOT create an analysis statement.
+         * (Same semantic behavior as earlier, but without broken empty statement)
+         */
         if (estimateResponse == null
                 || estimateResponse.getEstimates() == null
                 || estimateResponse.getEstimates().isEmpty()) {
 
             log.info(
-                "Draft ANALYSIS create flow. Creating minimal statement only. referenceId={}, tenantId={}",
+                "No estimate found. Skipping Analysis Statement creation. referenceId={}, tenantId={}",
                 statementRequest.getId(),
                 statementRequest.getTenantId()
             );
 
-            Statement statement = Statement.builder()
-                    .id(statementRequest.getId())
-                    .tenantId(statementRequest.getTenantId())
-                    .targetId(statementRequest.getId())
-                    .statementType(Statement.StatementTypeEnum.ANALYSIS)
-                    .sorDetails(Collections.emptyList())
-                    .basicSorDetails(Collections.emptyList())
-                    .additionalDetails(new HashMap<>())
-                    .build();
-
-            AuditDetails auditDetails =
-                    statementServiceUtil.getAuditDetails(
-                            requestInfo.getUserInfo().getUuid(),
-                            statement,
-                            true
-                    );
-            statement.setAuditDetails(auditDetails);
-
-            return StatementPushRequest.builder()
-                    .requestInfo(requestInfo)
-                    .statement(statement)
-                    .build();
+            return null;
         }
 
-        
-        // NORMAL CREATE (estimate exists)
- 
+        /*
+         * IMPORTANT FIX:
+         * Even if estimate is in DRAFT state,
+         * ALWAYS build analysis from estimate details
+         * so that UI can render Material / Labour / Machinery
+         */
+        Estimate estimateFromService = estimateResponse.getEstimates().get(0);
+
+        log.info(
+            "Creating Analysis Statement from estimate (draft or final). estimateId={}, tenantId={}",
+            estimateFromService.getId(),
+            estimateFromService.getTenantId()
+        );
+
         return enrichStatementPushRequestWithDetails(
-                estimateResponse.getEstimates().get(0),
+                estimateFromService,
                 requestInfo,
                 statementRequest,
-                isCreate
+                true   // force CREATE semantics
         );
     }
 
-
-    // UPDATE / INTERNAL FLOW
-
+    /*
+     * UPDATE / INTERNAL FLOW
+     * (unchanged behavior)
+     */
     return enrichStatementPushRequestWithDetails(
             estimate,
             requestInfo,
