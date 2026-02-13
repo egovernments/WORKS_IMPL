@@ -9,7 +9,7 @@ on:
         required: true
         type: choice
         options:
-          - micro-ui
+          - micro-ui/works-ui
           - works_shg_app
 
 env:
