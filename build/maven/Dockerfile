@@ -1,3 +1,4 @@
+# Build stage
 FROM maven:3.9.6-amazoncorretto-17 AS build
 ARG WORK_DIR
 WORKDIR /app
@@ -10,10 +11,13 @@ COPY ${WORK_DIR}/src ./src
 # Build the project
 RUN mvn -B -f /app/pom.xml package
 
-# Runtime image – using a multi-arch base image
+# Runtime stage – using multi-arch Alpine base image
 FROM amazoncorretto:17-alpine
 
 WORKDIR /opt/egov
+
+# Install dos2unix (FIX ADDED HERE)
+RUN apk add --no-cache dos2unix
 
 # Copy artifacts from the build stage
 COPY --from=build /app/target/*.jar /app/start.sh /opt/egov/
@@ -21,7 +25,7 @@ COPY --from=build /app/target/*.jar /app/start.sh /opt/egov/
 # Ensure the start script has correct line endings and is executable
 RUN dos2unix /opt/egov/start.sh && chmod +x /opt/egov/start.sh
 
-# Verify architecture inside the container
+# Verify architecture inside the container (optional debug)
 RUN uname -m
 
 CMD ["/opt/egov/start.sh"]
