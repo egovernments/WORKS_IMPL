@@ -155,17 +155,17 @@ config:
 # frontend
   - name: builds/mukta_impl/frontend/micro-ui/works-ui
     build:
-      - work-dir: frontend/micro-ui/
+      - work-dir: frontend/micro-ui/web/
         dockerfile: frontend/micro-ui/web/docker/Dockerfile
         image-name: works-ui
   - name: builds/mukta_impl/frontend/works
     build:
-      - work-dir: frontend/micro-ui/
+      - work-dir: frontend/micro-ui/web/
         dockerfile: frontend/micro-ui/web/works/Dockerfile
         image-name: works-ui
   - name: builds/mukta_impl/frontend/core
     build:
-      - work-dir: frontend/micro-ui/
+      - work-dir: frontend/micro-ui/web/
         dockerfile: frontend/micro-ui/web/works/Dockerfile
         image-name: core-ui
 
