@@ -8,7 +8,7 @@ RUN apk add --no-cache python3 make g++ \
 
 ARG WORK_DIR
 WORKDIR /app
-ENV NODE_OPTIONS="--max-old-space-size=8500"
+ENV NODE_OPTIONS="--max-old-space-size=8500 --openssl-legacy-provider"
 ENV YARN_DEBUG=true
 ENV GENERATE_SOURCEMAP="false"
 
@@ -29,9 +29,10 @@ RUN node -e "console.log('Heap limit (MB):', v8.getHeapStatistics().heap_size_li
 RUN node -e "console.log('core only')"
 
 
-WORKDIR /app/web
 RUN chmod +x /app/install-deps.sh
 RUN /app/install-deps.sh
+
+WORKDIR /app/web
 
 # Return to main directory for install/build
 WORKDIR /app/web
