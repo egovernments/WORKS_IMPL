@@ -10,7 +10,7 @@ ARG WORK_DIR
 WORKDIR /app
 ENV NODE_OPTIONS="--max-old-space-size=8500"
 ENV YARN_DEBUG=true
-ENV GENERATE_SOURCEMAP "false"
+ENV GENERATE_SOURCEMAP="false"
 
 # Accept the build argument
 ARG REACT_APP_PUBLIC_PATH
@@ -30,8 +30,8 @@ RUN node -e "console.log('core only')"
 
 
 WORKDIR /app/web
-RUN chmod +x ./install-deps.sh
-RUN ./install-deps.sh
+RUN chmod +x /app/install-deps.sh
+RUN /app/install-deps.sh
 
 # Return to main directory for install/build
 WORKDIR /app/web
