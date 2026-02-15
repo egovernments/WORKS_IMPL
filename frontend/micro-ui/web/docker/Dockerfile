@@ -1,52 +1,23 @@
 FROM node:20-alpine AS build
-RUN apk update
-RUN apk add --no-cache 'git>2.30.0'
+RUN apk update && apk upgrade
+RUN apk add --no-cache git>2.30.0
 # Install dependencies required for node-gyp (Python, make, g++, etc.)
 RUN apk add --no-cache python3 make g++ \
     && ln -sf /usr/bin/python3 /usr/bin/python
 
-
 ARG WORK_DIR
 WORKDIR /app
-ENV NODE_OPTIONS="--max-old-space-size=8500 --openssl-legacy-provider"
-ENV YARN_DEBUG=true
-ENV GENERATE_SOURCEMAP="false"
-
-# Accept the build argument
-ARG REACT_APP_PUBLIC_PATH
-ENV REACT_APP_PUBLIC_PATH=${REACT_APP_PUBLIC_PATH}
+ENV NODE_OPTIONS "--max-old-space-size=8500 --openssl-legacy-provider"
+ENV GENERATE_SOURCEMAP "false"
 
 COPY ${WORK_DIR} .
 RUN ls -lah
 
-# Set working directory
-WORKDIR /app/web
-
-# Show heap size limit
-RUN node -e "console.log('Heap limit (MB):', v8.getHeapStatistics().heap_size_limit / (1024 * 1024))"
-
-# Print a marker log (optional debug message)
-RUN node -e "console.log('core only')"
-
-
-RUN chmod +x /app/install-deps.sh
-RUN /app/install-deps.sh
-
-WORKDIR /app/web
-
-# Return to main directory for install/build
-WORKDIR /app/web
-
-# Increase timeout before install (recommended for GitHub Actions)
-RUN yarn config set network-timeout 600000
-
-# Install dependencies
-RUN yarn install
-
-# Build metadata generation disabled (using static versionConfig)
-
-# Build the project
-RUN REACT_APP_PUBLIC_PATH=${REACT_APP_PUBLIC_PATH} yarn build:webpack
+RUN cd web/ \
+    && node -e 'console.log(v8.getHeapStatistics().heap_size_limit/(1024*1024))' \
+    && ./install-deps.sh \
+    && yarn install \
+    && yarn build:webpack
 
 FROM nginx:mainline-alpine
 ENV WORK_DIR=/var/web/digit-ui
