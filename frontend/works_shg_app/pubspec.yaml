@@ -188,4 +188,8 @@ flutter:
 
 dependency_overrides:
   intl: ^0.19.0
-  digit_ui_components: ^0.0.1+5
+  digit_components:
+    git:
+      url: https://github.com/egovernments/DIGIT-UI-LIBRARIES.git
+      ref: develop
+      path: flutter/digit-ui-components/digit_components
