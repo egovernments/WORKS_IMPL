@@ -1,27 +1,60 @@
+# -------- Build Stage --------
 FROM node:20-alpine AS build
+
+# Update and install required packages
 RUN apk update && apk upgrade
+
 RUN apk add --no-cache git>2.30.0
-# Install dependencies required for node-gyp (Python, make, g++, etc.)
+
+# Install dependencies required for node-gyp
 RUN apk add --no-cache python3 make g++ \
     && ln -sf /usr/bin/python3 /usr/bin/python
 
+# Set working directory
 ARG WORK_DIR
 WORKDIR /app
-ENV NODE_OPTIONS "--max-old-space-size=8500 --openssl-legacy-provider"
-ENV GENERATE_SOURCEMAP "false"
 
+# Environment variables
+ENV NODE_OPTIONS="--max-old-space-size=8500 --openssl-legacy-provider"
+ENV YARN_DEBUG=true
+ENV GENERATE_SOURCEMAP=false
+
+# Accept build argument
+ARG REACT_APP_PUBLIC_PATH
+ENV REACT_APP_PUBLIC_PATH=${REACT_APP_PUBLIC_PATH}
+
+# Copy application files
 COPY ${WORK_DIR} .
-RUN ls -lah
 
-RUN node -e 'console.log(v8.getHeapStatistics().heap_size_limit/(1024*1024))' \
-    && ./install-deps.sh \
-    && yarn install \
-    && yarn build:webpack
+# Debug (safe to keep)
+RUN pwd && ls -lah
 
+# Show heap size (optional debug)
+RUN node -e "console.log('Heap limit (MB):', v8.getHeapStatistics().heap_size_limit / (1024 * 1024))"
+
+# Make install script executable
+RUN chmod +x ./install-deps.sh
+
+# Increase yarn timeout (important for CI)
+RUN yarn config set network-timeout 600000
+
+# Install dependencies
+RUN ./install-deps.sh
+RUN yarn install
+
+# Build application
+RUN yarn build:webpack
+
+
+# -------- Production Stage --------
 FROM nginx:mainline-alpine
+
 ENV WORK_DIR=/var/web/digit-ui
 
 RUN mkdir -p ${WORK_DIR}
 
+# Copy built files
 COPY --from=build /app/build ${WORK_DIR}/
+
+# Copy nginx config
 COPY --from=build /app/docker/nginx.conf /etc/nginx/conf.d/default.conf
