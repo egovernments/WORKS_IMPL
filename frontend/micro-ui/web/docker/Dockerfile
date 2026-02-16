@@ -1,9 +1,10 @@
 # -------- Build Stage --------
 FROM node:20-alpine AS build
 
-# Update and install required packages
+# Update Alpine and install required packages
 RUN apk update && apk upgrade
 
+# Install git
 RUN apk add --no-cache git>2.30.0
 
 # Install dependencies required for node-gyp
@@ -19,41 +20,43 @@ ENV NODE_OPTIONS="--max-old-space-size=8500 --openssl-legacy-provider"
 ENV YARN_DEBUG=true
 ENV GENERATE_SOURCEMAP=false
 
-# Accept build argument
+# Accept public path argument
 ARG REACT_APP_PUBLIC_PATH
 ENV REACT_APP_PUBLIC_PATH=${REACT_APP_PUBLIC_PATH}
 
-# Copy application files
+# Copy application files into container
 COPY ${WORK_DIR} .
 
-# Debug (safe to keep)
+# Debug: verify files copied correctly (safe to keep)
 RUN pwd && ls -lah
 
-# Show heap size (optional debug)
+# Show Node heap size (debug)
 RUN node -e "console.log('Heap limit (MB):', v8.getHeapStatistics().heap_size_limit / (1024 * 1024))"
 
 # Make install script executable
-RUN chmod +x ./install-deps.sh
+RUN chmod +x install-deps.sh
 
-# Increase yarn timeout (important for CI)
+# Increase yarn timeout for CI stability
 RUN yarn config set network-timeout 600000
 
 # Install dependencies
 RUN ./install-deps.sh
 RUN yarn install
 
-# Build application
+# Build the application
 RUN yarn build:webpack
 
 
 # -------- Production Stage --------
 FROM nginx:mainline-alpine
 
+# Set target directory
 ENV WORK_DIR=/var/web/digit-ui
 
+# Create directory
 RUN mkdir -p ${WORK_DIR}
 
-# Copy built files
+# Copy built UI files
 COPY --from=build /app/build ${WORK_DIR}/
 
 # Copy nginx config
