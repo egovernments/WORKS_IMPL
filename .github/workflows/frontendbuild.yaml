@@ -10,7 +10,7 @@ on:
         type: choice
         options:
           - micro-ui/works-ui
-          - works_shg_app
+          - - works-shg-app
 
 env:
   DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}

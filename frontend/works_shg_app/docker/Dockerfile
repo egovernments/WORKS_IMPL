@@ -4,13 +4,16 @@ FROM ghcr.io/cirruslabs/flutter:3.16.5 AS build
 ARG WORK_DIR
 WORKDIR /app
 
-# Copy Flutter project
+# Copy Flutter project into container
 COPY ${WORK_DIR} .
 
-# Debug (safe to keep)
+# Debug (optional but recommended)
 RUN pwd && ls -lah
 
-# Verify Flutter
+# Ensure Flutter web is enabled
+RUN flutter config --enable-web
+
+# Verify Flutter installation
 RUN flutter doctor -v
 
 # Clean and fetch dependencies
@@ -28,7 +31,7 @@ ENV WEB_DIR=/var/web/works-shg-app
 
 RUN mkdir -p ${WEB_DIR}
 
-# Copy built Flutter web files
+# Copy built web app to nginx
 COPY --from=build /app/build/web/ ${WEB_DIR}/
 
 # Copy nginx config
