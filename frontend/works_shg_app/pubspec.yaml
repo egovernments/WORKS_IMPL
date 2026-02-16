@@ -154,6 +154,7 @@ flutter:
     fonts:
       - asset: assets/icons/fonts/SHGIcons.ttf
 
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
@@ -184,3 +185,6 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+
+dependency_overrides:
+  intl: ^0.19.0
