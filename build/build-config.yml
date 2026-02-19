@@ -179,6 +179,7 @@ config:
   - name: "builds/mukta_impl/utilities/works-pdf"
     build:
       - work-dir: "utilities/works-pdf"
+        dockerfile: "utilities/works-pdf/Dockerfile"
         image-name: "works-pdf"
       - work-dir: "utilities/works-pdf/migration"
         image-name: "works-pdf-db"  
