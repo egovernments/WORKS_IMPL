@@ -239,12 +239,12 @@ class FilePickerDemoState extends State<FilePickerDemo> {
                   alignment: Alignment.centerLeft,
                   child: ElevatedButton(
                     style: ButtonStyle(
-                        padding: MaterialStateProperty.all(
+                        padding: WidgetStateProperty.all(
                             const EdgeInsets.symmetric(horizontal: 15)),
-                        backgroundColor: MaterialStateProperty.all<Color>(
+                        backgroundColor: WidgetStateProperty.all<Color>(
                             const Color.fromARGB(255, 228, 223, 220)),
                         shape:
-                            MaterialStateProperty.all<RoundedRectangleBorder>(
+                            WidgetStateProperty.all<RoundedRectangleBorder>(
                           const RoundedRectangleBorder(
                             borderRadius: BorderRadius.zero,
                           ),

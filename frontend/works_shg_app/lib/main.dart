@@ -12,7 +12,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:open_filex/open_filex.dart';
-import 'package:url_strategy/url_strategy.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:works_shg_app/blocs/app_initilization/home_screen_bloc.dart';
 import 'package:works_shg_app/blocs/attendance/attendance_user_search.dart';
 import 'package:works_shg_app/blocs/attendance/individual_search.dart';
@@ -159,11 +159,11 @@ class _MainApplicationState extends State<MainApplication> {
     super.dispose();
   }
 
+  @pragma('vm:entry-point')
   static void downloadCallback(String id, int status, int progress) {
-    final SendPort send =
-        IsolateNameServer.lookupPortByName('downloader_send_port')!;
-
-    send.send([id, status, progress]);
+    final SendPort? send =
+        IsolateNameServer.lookupPortByName('downloader_send_port');
+    send?.send([id, status, progress]);
   }
 
   afterViewBuild() async {

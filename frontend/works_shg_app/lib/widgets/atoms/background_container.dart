@@ -11,7 +11,7 @@ class BackgroundContainer extends StatelessWidget {
           color: const Color(0xff0B4B66),
           image: DecorationImage(
             colorFilter: ColorFilter.mode(
-                Colors.black.withOpacity(0.2), BlendMode.dstATop),
+                Colors.black.withValues(alpha: 0.2), BlendMode.dstATop),
             image: NetworkImage(bannerURL),
             fit: BoxFit.cover,
           ),
