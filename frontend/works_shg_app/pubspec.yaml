@@ -140,19 +140,18 @@ flutter:
     - assets/animated_json/
     - assets/icons/svg/
   fonts:
-  - family: Roboto
-    fonts:
-      - asset: assets/fonts/Roboto/Roboto-Regular.ttf
-  - family: Roboto Condensed
-    fonts:
-      - asset: assets/fonts/Roboto/RobotoCondensed-Regular.ttf
-  - family: Hindhi
-    fonts:
-      - asset: assets/fonts/Roboto/Hind-Regular.ttf
-  - family: SHGIcons
-    fonts:
-      - asset: assets/icons/fonts/SHGIcons.ttf
-
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto/Roboto-Regular.ttf
+    - family: Roboto Condensed
+      fonts:
+        - asset: assets/fonts/Roboto/RobotoCondensed-Regular.ttf
+    - family: Hindhi
+      fonts:
+        - asset: assets/fonts/Roboto/Hind-Regular.ttf
+    - family: SHGIcons
+      fonts:
+        - asset: assets/icons/fonts/SHGIcons.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:
