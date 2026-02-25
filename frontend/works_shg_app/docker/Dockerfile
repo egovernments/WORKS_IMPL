@@ -10,11 +10,9 @@ RUN pwd && ls -lah
 
 RUN flutter config --enable-web
 
-RUN flutter doctor -v
+RUN grep -n "^  intl:" pubspec.yaml || true
 
-RUN flutter clean
-
-RUN flutter pub get --no-precompile
+RUN rm -f pubspec.lock && flutter pub get --no-precompile
 
 RUN flutter build web --release
 
