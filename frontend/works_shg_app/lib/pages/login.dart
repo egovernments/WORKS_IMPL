@@ -4,7 +4,6 @@ import 'dart:async';
 
 import 'package:digit_ui_components/digit_components.dart';
 import 'package:digit_ui_components/enum/app_enums.dart';
-import 'package:digit_ui_components/models/privacy_notice/privacy_notice_model.dart';
 import 'package:digit_ui_components/theme/digit_extended_theme.dart';
 import 'package:digit_ui_components/widgets/atoms/labelled_fields.dart'
     as ui_label;
@@ -12,7 +11,6 @@ import 'package:digit_ui_components/widgets/atoms/pop_up_card.dart';
 import 'package:digit_ui_components/widgets/atoms/text_block.dart';
 
 import 'package:digit_ui_components/widgets/molecules/digit_card.dart';
-import 'package:digit_ui_components/widgets/privacy_policy/privacy_component.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -125,7 +123,6 @@ class _LoginPageState extends State<LoginPage>
 //old
 
               ToggleList(
-                capitalizeFirstLetter: false,
                 contentPadding: const EdgeInsets.all(0),
                 toggleWidth: MediaQuery.sizeOf(context).width * 0.4,
                 toggleButtons: [
@@ -398,45 +395,7 @@ class _LoginPageState extends State<LoginPage>
               ),
 
               
-              Padding(
-                padding: EdgeInsets.only(
-                    top: Theme.of(context).spacerTheme.spacer4,
-                    bottom: Theme.of(context).spacerTheme.spacer4),
-                child:
-                    BlocBuilder<AppInitializationBloc, AppInitializationState>(
-                        builder: (context, initState) {
-                  if (initState.initMdmsModel?.commonUIConfigModel
-                              ?.privacyPolicyModels ==
-                          null ||
-                      initState.initMdmsModel!.commonUIConfigModel!
-                          .privacyPolicyModels!.isEmpty) {
-                    return const SizedBox.shrink();
-                  }
-
-                  formGroup
-                      .control(privacyPolicy)
-                      .setValidators([Validators.requiredTrue]);
-                  formGroup.control(privacyPolicy).updateValueAndValidity();
-                  return PrivacyComponent(
-                    privacyPolicy: convertToPrivacyPolicyModel(
-                        AppLocalizations.of(loginContext),
-                        initState.initMdmsModel!.commonUIConfigModel!
-                            .privacyPolicyModels!.first),
-                    formControlName: privacyPolicy,
-                    text: AppLocalizations.of(loginContext)
-                        .translate(i18.privacyPolicy.byClick),
-                    linkText: AppLocalizations.of(loginContext)
-                        .translate(i18.privacyPolicy.privacyPolicyLink),
-                    validationMessage: AppLocalizations.of(loginContext)
-                        .translate(
-                            i18.privacyPolicy.privacyPolicyValidationText),
-                    acceptText: AppLocalizations.of(loginContext)
-                        .translate(i18.privacyPolicy.accept),
-                    declineText: AppLocalizations.of(loginContext)
-                        .translate(i18.privacyPolicy.decline),
-                  );
-                }),
-              ),
+              const SizedBox.shrink(),
               _buildLoginButton(
                   AppLocalizations.of(loginContext), context, formGroup),
             ],
@@ -477,7 +436,7 @@ class _LoginPageState extends State<LoginPage>
                         color: const Color(0xff0B4B66),
                         image: DecorationImage(
                           colorFilter: ColorFilter.mode(
-                              Colors.black.withValues(alpha: 0.2), BlendMode.dstATop),
+                              Colors.black.withOpacity(0.2), BlendMode.dstATop),
                           image: NetworkImage(GlobalVariables
                               .stateInfoListModel!.bannerUrl
                               .toString()),
@@ -589,41 +548,7 @@ class _LoginPageState extends State<LoginPage>
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: EdgeInsets.only(
-                        top: Theme.of(context).spacerTheme.spacer4,
-                        bottom: Theme.of(context).spacerTheme.spacer4),
-                    child: BlocBuilder<AppInitializationBloc,
-                        AppInitializationState>(builder: (context, initState) {
-                      if (initState.initMdmsModel?.commonUIConfigModel
-                                  ?.privacyPolicyModels ==
-                              null ||
-                          initState.initMdmsModel!.commonUIConfigModel!
-                              .privacyPolicyModels!.isEmpty) {
-                        return const SizedBox.shrink();
-                      }
-
-                      formGroup
-                          .control(privacyPolicy)
-                          .setValidators([Validators.requiredTrue]);
-                      formGroup.control(privacyPolicy).updateValueAndValidity();
-
-                      return PrivacyComponent(
-                        declineText: t.translate(i18.privacyPolicy.decline),
-                        acceptText: t.translate(i18.privacyPolicy.accept),
-                        privacyPolicy: convertToPrivacyPolicyModel(
-                            t,
-                            initState.initMdmsModel!.commonUIConfigModel!
-                                .privacyPolicyModels!.first),
-                        formControlName: privacyPolicy,
-                        text: t.translate(i18.privacyPolicy.byClick),
-                        linkText:
-                            t.translate(i18.privacyPolicy.privacyPolicyLink),
-                        validationMessage: t.translate(
-                            i18.privacyPolicy.privacyPolicyValidationText),
-                      );
-                    }),
-                  ),
+                  const SizedBox.shrink(),
                   _buildLoginButton(t, context, formGroup),
                 ],
               );
@@ -644,53 +569,6 @@ class _LoginPageState extends State<LoginPage>
   FormGroup detailCboBuildForm() => fb.group(<String, Object>{
         privacyPolicy: FormControl<bool>(value: false),
       });
-
-  // convert to privacy notice model
-  PrivacyNoticeModel? convertToPrivacyPolicyModel(
-      AppLocalizations t, PrivacyPolicyModel? privacyPolicy) {
-    return PrivacyNoticeModel(
-      header: privacyPolicy?.header != null
-          ? t.translate(privacyPolicy!.header!)
-          : '',
-      module: privacyPolicy?.module != null
-          ? t.translate(privacyPolicy!.module!)
-          : '',
-      active: privacyPolicy?.active,
-      contents: privacyPolicy?.contents
-          ?.map((content) => ContentNoticeModel(
-                header:
-                    content.header != null ? t.translate(content.header!) : '',
-                descriptions: content.descriptions
-                    ?.map((description) => DescriptionNoticeModel(
-                          text: description.text != null
-                              ? t.translate(description.text!)
-                              : '',
-                          type: description.type != null
-                              ? description.type == "step"
-                                  ? 'Step'
-                                  : t.translate(description.type!)
-                              : '',
-                          isBold: description.isBold,
-                          subDescriptions: description.subDescriptions
-                              ?.map(
-                                  (subDescription) => SubDescriptionNoticeModel(
-                                        text: subDescription.text != null
-                                            ? t.translate(subDescription.text!)
-                                            : '',
-                                        type: subDescription.type != null
-                                            ? t.translate(subDescription.type!)
-                                            : '',
-                                        isBold: subDescription.isBold,
-                                        isSpaceRequired:
-                                            subDescription.isSpaceRequired,
-                                      ))
-                              .toList(),
-                        ))
-                    .toList(),
-              ))
-          .toList(),
-    );
-  }
 
 //
 

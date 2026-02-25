@@ -90,7 +90,7 @@ import 'models/user_details/user_details_model.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = MyHttpOverrides();
-  setPathUrlStrategy();
+  usePathUrlStrategy();
   if (kIsWeb && !kDebugMode) {
     setEnvironment(Environment.dev);
   } else {
