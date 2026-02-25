@@ -166,7 +166,6 @@ class FinancialDetailsState extends State<FinancialDetailsPage> {
                     formControlName: accountNoKey,
                     builder: (field) {
                       return DigitTextFormInput(
-                        obscureText: true,
                         // charCount: true,
                         controller: TextEditingController()
                           ..text = form.control(accountNoKey).value ?? '',

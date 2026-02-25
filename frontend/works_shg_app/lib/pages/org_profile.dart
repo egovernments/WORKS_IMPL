@@ -7,6 +7,7 @@ import 'package:digit_ui_components/widgets/atoms/text_block.dart';
 import 'package:digit_ui_components/widgets/powered_by_digit.dart';
 
 import 'package:easy_stepper/easy_stepper.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:works_shg_app/blocs/localization/app_localization.dart';
 import 'package:works_shg_app/router/app_router.dart';
